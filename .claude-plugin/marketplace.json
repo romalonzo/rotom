@@ -1,0 +1,11 @@
+{
+  "name": "rotom",
+  "owner": { "name": "Romeo Malonzo" },
+  "plugins": [
+    {
+      "name": "rotom",
+      "source": "./",
+      "description": "UiPath-grade RPA for Playwright as Claude Code skills + subagents + an MCP server."
+    }
+  ]
+}
