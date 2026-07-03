@@ -1,6 +1,6 @@
 {
   "name": "rotom-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Rotom MCP server — the RPA reliability layer for Claude Code. Resilient Playwright automation: cascade locators, vision fallback, OCR.",
   "license": "MIT",
   "type": "module",

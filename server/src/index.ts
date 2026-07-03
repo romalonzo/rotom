@@ -11,11 +11,30 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { chromium, type Browser, type Page } from "playwright";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import { resolve, describe, type Hints } from "./locator.js";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 let browser: Browser | null = null;
+let context: BrowserContext | null = null;
 let page: Page | null = null;
+
+// Launch a browser. With `profile`, use a persistent context so a manual login is
+// saved on disk and reused on later runs — the key to operating logged-in sites.
+async function launchBrowser(headless: boolean, channel?: string, profile?: string): Promise<void> {
+  const opts: any = { headless };
+  if (channel) opts.channel = channel;
+  if (profile) {
+    const dir = join(homedir(), ".rotom", "profiles", profile.replace(/[^a-zA-Z0-9_-]/g, "_"));
+    context = await chromium.launchPersistentContext(dir, opts);
+    page = context.pages()[0] ?? (await context.newPage());
+  } else {
+    browser = await chromium.launch(opts);
+    context = await browser.newContext();
+    page = await context.newPage();
+  }
+}
 
 async function ensurePage(): Promise<Page> {
   if (!page) throw new Error("No page is open. Call rotom_open with a URL first.");
@@ -34,31 +53,34 @@ const hintsShape = {
   exact: z.boolean().optional().describe("Match text/name exactly (default false)"),
 };
 
-const server = new McpServer({ name: "rotom", version: "0.2.0" });
+const server = new McpServer({ name: "rotom", version: "0.3.0" });
 
 server.tool(
   "rotom_open",
-  "Launch a Chromium browser and navigate to a URL. Call this before locating or acting on elements.",
+  "Launch a browser and navigate to a URL. For logged-in sites use `profile` for a named persistent session that reuses a saved login across runs: the first time, set headless:false and channel:'chrome', open the login page, let the human log in by hand, and the session persists so later runs are already authenticated.",
   {
     url: z.string().describe("The URL to open"),
-    headless: z.boolean().optional().describe("Run headless (default true)"),
+    headless: z.boolean().optional().describe("Run headless (default true). Use false so a human can log in."),
+    profile: z.string().optional().describe("Named persistent profile (e.g. 'ghl') that saves cookies/login on disk and reuses them next time."),
+    channel: z.string().optional().describe("Browser channel, e.g. 'chrome' to use installed Google Chrome (recommended for logged-in sites)."),
   },
-  async ({ url, headless }) => {
+  async ({ url, headless, profile, channel }) => {
     const h = headless ?? true;
-    if (!browser) {
+    if (!page) {
       try {
-        browser = await chromium.launch({ headless: h });
+        await launchBrowser(h, channel, profile);
       } catch {
         try {
-          browser = await chromium.launch({ headless: h, channel: "chrome" });
+          // Retry without the channel in case the requested channel isn't installed.
+          await launchBrowser(h, undefined, profile);
         } catch {
           throw new Error("Could not launch a browser. Install one with: npx playwright install chromium");
         }
       }
     }
-    if (!page) page = await browser.newPage();
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-    return { content: [{ type: "text", text: `Opened ${page.url()} — "${await page.title()}"` }] };
+    const p = page as Page;
+    await p.goto(url, { waitUntil: "domcontentloaded" });
+    return { content: [{ type: "text", text: `Opened ${p.url()} — "${await p.title()}"${profile ? ` (profile: ${profile})` : ""}` }] };
   }
 );
 
@@ -211,15 +233,29 @@ server.tool(
 );
 
 server.tool(
-  "rotom_close",
-  "Close the browser and free resources.",
+  "rotom_page",
+  "Return the current page URL and title without navigating. Use to confirm state, for example after a human has logged in.",
   {},
   async () => {
+    const p = await ensurePage();
+    return { content: [{ type: "text", text: `${p.url()} — "${await p.title()}"` }] };
+  }
+);
+
+server.tool(
+  "rotom_close",
+  "Close the browser and free resources. A persistent profile's saved login stays on disk for next time.",
+  {},
+  async () => {
+    if (context) {
+      await context.close();
+      context = null;
+    }
     if (browser) {
       await browser.close();
       browser = null;
-      page = null;
     }
+    page = null;
     return { content: [{ type: "text", text: "Browser closed." }] };
   }
 );

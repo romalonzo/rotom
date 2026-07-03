@@ -30,10 +30,10 @@ try {
 
   // tools registered
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  for (const t of ["rotom_open", "rotom_locate", "rotom_click", "rotom_fill", "rotom_get_text", "rotom_extract", "rotom_wait_for", "rotom_screenshot", "rotom_click_at", "rotom_ocr", "rotom_close"]) {
+  for (const t of ["rotom_open", "rotom_locate", "rotom_click", "rotom_fill", "rotom_get_text", "rotom_extract", "rotom_wait_for", "rotom_screenshot", "rotom_click_at", "rotom_ocr", "rotom_page", "rotom_close"]) {
     assert.ok(tools.includes(t), `tool ${t} registered`);
   }
-  ok("all 11 tools registered");
+  ok("all 12 tools registered");
 
   // open
   let r = await call("rotom_open", { url: fixture, headless: true });
