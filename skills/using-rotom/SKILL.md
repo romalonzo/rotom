@@ -8,9 +8,12 @@ description: Read this first when a task involves operating a website or app UI 
 Rotom gives you reliable hands for operating any UI. When a task means driving a browser or automating a web app, reach for a Rotom "form" instead of hand-rolling raw Playwright, so the automation holds up when selectors change or the page is dynamic.
 
 ## Forms available
-- **resilient-locator** — find an element by several strategies (role, text, test id, structure) so it does not break when the DOM shifts.
-- **vision-fallback** — when the DOM approach fails, locate and act on the element by what the screen actually looks like.
-- **structured-extract** — pull structured data off a rendered page reliably.
+- **resilient-locator** — resolve an element through a cascade of strategies so it does not break when the DOM shifts.
+- **vision-fallback** — when the DOM cannot find it, screenshot and act by coordinates.
+- **structured-extract** — pull structured data off a rendered page into JSON.
+- **ocr** — read text baked into images or canvas.
+- **retry-and-verify** — confirm each action worked; recover from transient failures.
+- **writing-rotom-forms** — how to author and pressure-test new forms.
 
 ## When to use Rotom
 - Any browser or UI automation where selectors may be brittle or the page is dynamic.

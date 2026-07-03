@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 /**
- * Rotom MCP server — resilient Playwright automation for Claude Code.
+ * Rotom MCP server — the RPA reliability layer for Claude Code.
  *
- * The point of Rotom is the resilient-locator cascade: instead of the model
- * hand-picking one brittle CSS/XPath selector (what a bare Playwright MCP does),
- * the caller passes semantic hints and the server tries them in resilience order
- * (role+name, testId, label, placeholder, text, role, css, xpath) and reports
- * which one actually matched.
+ * Core idea: instead of the model hand-picking one brittle CSS/XPath selector
+ * (what a bare Playwright MCP does), the caller passes semantic hints and the
+ * server resolves them through a resilience cascade, reports which strategy
+ * matched, and falls back to the agent's own vision (screenshot + click-at) or
+ * OCR when the DOM cannot identify the target.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { chromium, type Browser, type Page, type Locator } from "playwright";
+import { chromium, type Browser, type Page } from "playwright";
+import { resolve, describe, type Hints } from "./locator.js";
 
 let browser: Browser | null = null;
 let page: Page | null = null;
@@ -19,73 +20,6 @@ let page: Page | null = null;
 async function ensurePage(): Promise<Page> {
   if (!page) throw new Error("No page is open. Call rotom_open with a URL first.");
   return page;
-}
-
-interface Hints {
-  role?: string;
-  name?: string;
-  text?: string;
-  label?: string;
-  placeholder?: string;
-  testId?: string;
-  css?: string;
-  xpath?: string;
-  exact?: boolean;
-}
-
-interface Resolved {
-  locator: Locator;
-  strategy: string;
-  matches: number;
-}
-
-/** Try locator strategies most-robust-first; return the first that matches. */
-async function resolve(p: Page, h: Hints): Promise<Resolved | null> {
-  const exact = h.exact ?? false;
-  const attempts: Array<{ strategy: string; make: () => Locator }> = [];
-
-  if (h.role && h.name)
-    attempts.push({ strategy: `role="${h.role}" name="${h.name}"`, make: () => p.getByRole(h.role as never, { name: h.name, exact }) });
-  if (h.testId)
-    attempts.push({ strategy: `testId="${h.testId}"`, make: () => p.getByTestId(h.testId as string) });
-  if (h.label)
-    attempts.push({ strategy: `label="${h.label}"`, make: () => p.getByLabel(h.label as string, { exact }) });
-  if (h.placeholder)
-    attempts.push({ strategy: `placeholder="${h.placeholder}"`, make: () => p.getByPlaceholder(h.placeholder as string, { exact }) });
-  if (h.text)
-    attempts.push({ strategy: `text="${h.text}"`, make: () => p.getByText(h.text as string, { exact }) });
-  if (h.role && !h.name)
-    attempts.push({ strategy: `role="${h.role}"`, make: () => p.getByRole(h.role as never) });
-  if (h.css)
-    attempts.push({ strategy: `css="${h.css}"`, make: () => p.locator(h.css as string) });
-  if (h.xpath)
-    attempts.push({ strategy: `xpath`, make: () => p.locator(`xpath=${h.xpath}`) });
-
-  for (const a of attempts) {
-    try {
-      const loc = a.make();
-      const count = await loc.count();
-      if (count >= 1) {
-        return { locator: count === 1 ? loc : loc.first(), strategy: a.strategy, matches: count };
-      }
-    } catch {
-      // this strategy failed to build/evaluate — fall through to the next
-    }
-  }
-  return null;
-}
-
-async function describe(loc: Locator): Promise<string> {
-  try {
-    return await loc.evaluate((el) => {
-      const e = el as HTMLElement;
-      const text = (e.innerText || e.textContent || "").trim().slice(0, 80);
-      const r = e.getBoundingClientRect();
-      return `<${e.tagName.toLowerCase()}> "${text}" at (${Math.round(r.x)},${Math.round(r.y)}) ${Math.round(r.width)}x${Math.round(r.height)}`;
-    });
-  } catch {
-    return "(element found; details unavailable)";
-  }
 }
 
 const hintsShape = {
@@ -100,7 +34,7 @@ const hintsShape = {
   exact: z.boolean().optional().describe("Match text/name exactly (default false)"),
 };
 
-const server = new McpServer({ name: "rotom", version: "0.1.0" });
+const server = new McpServer({ name: "rotom", version: "0.2.0" });
 
 server.tool(
   "rotom_open",
@@ -110,7 +44,18 @@ server.tool(
     headless: z.boolean().optional().describe("Run headless (default true)"),
   },
   async ({ url, headless }) => {
-    if (!browser) browser = await chromium.launch({ headless: headless ?? true });
+    const h = headless ?? true;
+    if (!browser) {
+      try {
+        browser = await chromium.launch({ headless: h });
+      } catch {
+        try {
+          browser = await chromium.launch({ headless: h, channel: "chrome" });
+        } catch {
+          throw new Error("Could not launch a browser. Install one with: npx playwright install chromium");
+        }
+      }
+    }
     if (!page) page = await browser.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded" });
     return { content: [{ type: "text", text: `Opened ${page.url()} — "${await page.title()}"` }] };
@@ -125,7 +70,7 @@ server.tool(
     const p = await ensurePage();
     const r = await resolve(p, h);
     if (!r)
-      return { content: [{ type: "text", text: "No element matched the hints (tried in resilience order). Add a role+name or a testId — those are the most robust." }], isError: true };
+      return { content: [{ type: "text", text: "No element matched the hints (tried in resilience order). Add a role+name or a testId — those are the most robust. If the DOM cannot identify it, use rotom_screenshot then rotom_click_at." }], isError: true };
     return { content: [{ type: "text", text: `Matched via ${r.strategy}${r.matches > 1 ? ` (first of ${r.matches})` : ""}: ${await describe(r.locator)}` }] };
   }
 );
@@ -137,7 +82,7 @@ server.tool(
   async (h) => {
     const p = await ensurePage();
     const r = await resolve(p, h);
-    if (!r) return { content: [{ type: "text", text: "Cannot click: no element matched the hints." }], isError: true };
+    if (!r) return { content: [{ type: "text", text: "Cannot click: no element matched the hints. Try rotom_screenshot + rotom_click_at." }], isError: true };
     await r.locator.scrollIntoViewIfNeeded();
     await r.locator.click();
     return { content: [{ type: "text", text: `Clicked via ${r.strategy}.` }] };
@@ -151,7 +96,7 @@ server.tool(
   async (h) => {
     const p = await ensurePage();
     const { value, ...hints } = h;
-    const r = await resolve(p, hints);
+    const r = await resolve(p, hints as Hints);
     if (!r) return { content: [{ type: "text", text: "Cannot fill: no element matched the hints." }], isError: true };
     await r.locator.fill(value);
     return { content: [{ type: "text", text: `Filled via ${r.strategy}.` }] };
@@ -167,6 +112,101 @@ server.tool(
     const r = await resolve(p, h);
     if (!r) return { content: [{ type: "text", text: "No element matched the hints." }], isError: true };
     return { content: [{ type: "text", text: (await r.locator.innerText()).trim() || "(empty)" }] };
+  }
+);
+
+server.tool(
+  "rotom_extract",
+  "Extract structured data from the page. Give a list of fields, each with a key plus resilient-locator hints; returns a JSON object mapping each key to the matched element's text (or null if not found).",
+  {
+    fields: z
+      .array(z.object({ key: z.string().describe("Output key for this field"), ...hintsShape }))
+      .describe("Fields to extract; each uses the resilient cascade"),
+  },
+  async ({ fields }) => {
+    const p = await ensurePage();
+    const out: Record<string, string | null> = {};
+    for (const f of fields) {
+      const { key, ...hints } = f;
+      const r = await resolve(p, hints as Hints);
+      out[key] = r ? (await r.locator.innerText()).trim() : null;
+    }
+    return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
+  }
+);
+
+server.tool(
+  "rotom_wait_for",
+  "Wait until an element matching the hints appears (polls up to timeoutMs). Use to verify an action's effect or wait for dynamic content before proceeding.",
+  { ...hintsShape, timeoutMs: z.number().optional().describe("Max wait in ms (default 5000)") },
+  async (h) => {
+    const p = await ensurePage();
+    const { timeoutMs, ...hints } = h;
+    const deadline = timeoutMs ?? 5000;
+    const start = await p.evaluate(() => performance.now());
+    let elapsed = 0;
+    while (elapsed < deadline) {
+      const r = await resolve(p, hints as Hints);
+      if (r) return { content: [{ type: "text", text: `Appeared via ${r.strategy} after ~${Math.round(elapsed)}ms.` }] };
+      await p.waitForTimeout(250);
+      elapsed = (await p.evaluate(() => performance.now())) - start;
+    }
+    return { content: [{ type: "text", text: `Timed out after ${deadline}ms waiting for the element.` }], isError: true };
+  }
+);
+
+server.tool(
+  "rotom_screenshot",
+  "Take a screenshot of the current page and return it as an image. Use this as the vision fallback: when rotom_locate cannot find an element, look at the screenshot, then act with rotom_click_at.",
+  { fullPage: z.boolean().optional().describe("Capture the full scrollable page (default false = viewport)") },
+  async ({ fullPage }) => {
+    const p = await ensurePage();
+    const buf = await p.screenshot({ fullPage: fullPage ?? false });
+    return { content: [{ type: "image", data: buf.toString("base64"), mimeType: "image/png" }] };
+  }
+);
+
+server.tool(
+  "rotom_click_at",
+  "Click at absolute viewport coordinates (x, y). The vision fallback: use after rotom_screenshot when the DOM cannot identify the target but you can see it.",
+  { x: z.number().describe("X coordinate in CSS pixels"), y: z.number().describe("Y coordinate in CSS pixels") },
+  async ({ x, y }) => {
+    const p = await ensurePage();
+    await p.mouse.click(x, y);
+    return { content: [{ type: "text", text: `Clicked at (${x}, ${y}).` }] };
+  }
+);
+
+server.tool(
+  "rotom_ocr",
+  "Read text from the page (or a located element) using OCR. Use when text is baked into an image/canvas the DOM cannot expose. Requires the optional tesseract.js dependency.",
+  { ...hintsShape, fullPage: z.boolean().optional().describe("OCR the full page if no element hints are given") },
+  async (h) => {
+    const p = await ensurePage();
+    const { fullPage, ...hints } = h;
+    let image: Buffer;
+    const hasHints = Object.values(hints).some((v) => v !== undefined);
+    if (hasHints) {
+      const r = await resolve(p, hints as Hints);
+      if (!r) return { content: [{ type: "text", text: "No element matched the hints to OCR." }], isError: true };
+      image = await r.locator.screenshot();
+    } else {
+      image = await p.screenshot({ fullPage: fullPage ?? false });
+    }
+    let createWorker: (lang: string) => Promise<{ recognize: (img: Buffer) => Promise<{ data: { text: string } }>; terminate: () => Promise<void> }>;
+    try {
+      // @ts-ignore optional dependency, resolved at runtime
+      ({ createWorker } = await import("tesseract.js"));
+    } catch {
+      return { content: [{ type: "text", text: "OCR needs the optional tesseract.js dependency. Install it in the server: npm install tesseract.js" }], isError: true };
+    }
+    const worker = await createWorker("eng");
+    try {
+      const { data } = await worker.recognize(image);
+      return { content: [{ type: "text", text: (data.text || "").trim() || "(no text recognized)" }] };
+    } finally {
+      await worker.terminate();
+    }
   }
 );
 

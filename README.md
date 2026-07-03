@@ -21,15 +21,18 @@ Restart Claude Code after installing. Requires Claude Code 2.0.13 or newer.
 
 ## Forms
 
-- **resilient-locator** — find an element by several strategies so it survives DOM changes.
-- **vision-fallback** — when the DOM fails, locate and act by what the screen looks like.
-- **structured-extract** — pull structured data off a rendered page reliably.
+- **resilient-locator** — resolve an element through a cascade of strategies so it survives DOM changes.
+- **vision-fallback** — when the DOM cannot find it, screenshot and act by coordinates.
+- **structured-extract** — pull page data into clean JSON.
+- **ocr** — read text baked into images or canvas (optional tesseract.js).
+- **retry-and-verify** — confirm each action worked and recover from transient failures.
+- **writing-rotom-forms** — the meta-form for authoring and pressure-testing new forms.
 
-More forms (OCR, self-healing, orchestration) are on the roadmap.
+Roadmap: self-healing locator cache, table extraction, orchestration/queues.
 
 ## Status
 
-Early, and building in the open. Live now: the MCP server and the first form, **resilient-locator**. Next up: vision-fallback, structured-extract, then OCR and retry/verification. Star and watch to follow along.
+Early, and building in the open. Live now: the MCP server (11 tools) and six forms — resilient-locator, vision-fallback, structured-extract, ocr, retry-and-verify, writing-rotom-forms — with an end-to-end test suite passing against a local fixture. Star and watch to follow along.
 
 ## Development
 
@@ -40,9 +43,20 @@ cd server
 npm install
 npx playwright install chromium
 npm run build
+npm test        # end-to-end against test/fixture.html
 ```
 
-The plugin's `.mcp.json` launches the built server via `${CLAUDE_PLUGIN_ROOT}/server/dist/index.js`. Tools: `rotom_open`, `rotom_locate`, `rotom_click`, `rotom_fill`, `rotom_get_text`, `rotom_close`.
+Tools: `rotom_open`, `rotom_locate`, `rotom_click`, `rotom_fill`, `rotom_get_text`, `rotom_extract`, `rotom_wait_for`, `rotom_screenshot`, `rotom_click_at`, `rotom_ocr`, `rotom_close`.
+
+Run it locally before publishing:
+
+```
+claude mcp add rotom -- node /absolute/path/to/rotom/server/dist/index.js
+```
+
+## Distribution
+
+`.mcp.json` launches the server with `npx -y rotom-mcp`, so once the server package is published to npm the plugin installs and runs with no build step (first run still needs a browser: `npx playwright install chromium`). To publish (maintainers): `cd server && npm publish`.
 
 ## License
 

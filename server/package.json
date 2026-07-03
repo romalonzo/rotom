@@ -1,20 +1,25 @@
 {
-  "name": "@rotom/mcp-server",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "description": "Rotom MCP server — resilient Playwright automation tools for Claude Code.",
+  "name": "rotom-mcp",
+  "version": "0.2.0",
+  "description": "Rotom MCP server — the RPA reliability layer for Claude Code. Resilient Playwright automation: cascade locators, vision fallback, OCR.",
   "license": "MIT",
+  "type": "module",
   "bin": { "rotom-mcp": "dist/index.js" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "postbuild": "node -e \"process.stdout.write('rotom mcp built\\n')\""
+    "test": "node test/e2e.mjs",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "playwright": "^1.48.0",
     "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "tesseract.js": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

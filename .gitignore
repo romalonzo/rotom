@@ -10,3 +10,6 @@ Thumbs.db
 coverage/
 .playwright/
 test-results/
+# tesseract.js OCR language models (downloaded at runtime)
+*.traineddata
+*.traineddata.gz
