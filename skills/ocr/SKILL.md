@@ -1,6 +1,6 @@
 ---
 name: ocr
-description: Use to read text that lives inside an image, canvas, or rendered PDF where the DOM exposes no text. Call rotom_ocr, optionally with element hints to OCR just that element. Requires the optional tesseract.js dependency in the server.
+description: Use to read text, numbers, or labels that live inside an image, canvas, chart, screenshot, or rendered PDF, anywhere the value is visually present but the DOM and alt text expose no readable text. Call rotom_ocr, optionally passing element hints so it OCRs just the target region instead of the whole page. This is the right move the moment you would otherwise guess at a value you can see but cannot select. Needs the server's optional tesseract.js dependency; if it is missing, fall back to vision-fallback.
 ---
 
 # ocr

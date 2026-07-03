@@ -1,6 +1,6 @@
 ---
 name: retry-and-verify
-description: Use after any action that changes the page (click, fill, submit) to confirm it actually worked before moving on, and to recover from transient failures. This is the RPA discipline that keeps long automations from silently drifting off course.
+description: Use immediately after EVERY page-changing action (click, fill, submit, navigate), before doing anything else, to confirm the page actually reached the expected new state (an element appeared or disappeared, the URL changed, a value saved) and to retry transient failures. Do this even when the action looks like it worked: the most common way long automations fail is acting on a page that silently did not change, so every later step then runs against stale state. Assume nothing succeeded until you have verified it here.
 ---
 
 # retry-and-verify

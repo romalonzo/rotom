@@ -1,6 +1,6 @@
 ---
 name: resilient-locator
-description: Use when clicking, filling, or reading an element during browser automation and you want it to survive DOM and layout changes. Describe the element with semantic hints and let Rotom resolve it through a resilience cascade (role+name, test id, label, placeholder, text, role, css, xpath) via the rotom_locate / rotom_click / rotom_fill tools, instead of hand-picking one brittle CSS or XPath selector.
+description: Use this as the DEFAULT way to click, fill, or read ANY element in browser automation, including when you are rushed or told to just use a CSS selector. A hardcoded CSS or XPath selector is the brittle shortcut that silently breaks on the next DOM or layout change, and this is not slower. Instead of picking one selector, describe the element in plain terms (its visible label, role, or text) and call rotom_locate / rotom_click / rotom_fill; Rotom tries role+name, test id, label, placeholder, text, role, css, and xpath in order and uses the first that resolves. Reach for this any time you are about to write a raw querySelector or XPath.
 ---
 
 # resilient-locator

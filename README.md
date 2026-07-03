@@ -30,7 +30,30 @@ Once installed, Rotom auto-loads its `using-rotom` guide at the start of each se
 - **retry-and-verify** — confirm each action worked and recover from transient failures.
 - **writing-rotom-forms** — the meta-form for authoring and pressure-testing new forms.
 
-Roadmap: self-healing locator cache, table extraction, orchestration/queues.
+Roadmap (next forms, from a UiPath capability pass): `table-extract` (paginated grids to JSON), `session-fetch` (authenticated API calls from the browser session), `human-handoff` (pause for CAPTCHA/MFA/OTP), `document-extract`, and `run-trace`.
+
+## Example
+
+Instead of a brittle selector that breaks on the next redesign:
+
+```
+// raw Playwright — breaks when the DOM changes
+await page.click('#app > div.header button.btn-primary')
+```
+
+describe the element and let Rotom resolve it through the cascade:
+
+```
+rotom_click { role: "button", name: "Sign in" }
+// -> Clicked via role="button" name="Sign in"
+```
+
+If the DOM cannot find it at all (canvas, custom widget), fall back to sight:
+
+```
+rotom_screenshot          // you see the page
+rotom_click_at { x, y }   // click what you see
+```
 
 ## Status
 

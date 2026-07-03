@@ -1,6 +1,6 @@
 ---
 name: structured-extract
-description: Use to pull structured data off a rendered page — form values, a details panel, key fields — into clean JSON. Define the fields you want with resilient-locator hints and call rotom_extract; each field resolves through the same cascade so extraction does not break on layout changes.
+description: Use whenever you need to pull two or more fields off a rendered page (form values, a details panel, table cells, key/value pairs) instead of writing a querySelector loop, a page.evaluate scrape, or a manual DOM walk, which all break on any layout change. Define the fields you want, each with a plain-language locator hint (its label or nearby text), and call rotom_extract; every field resolves through the same resilient cascade and comes back as clean JSON. Reach for this the moment you are tempted to hand-roll extraction logic.
 ---
 
 # structured-extract
