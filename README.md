@@ -8,7 +8,7 @@ Named after the Pokemon that inhabits electronic devices and operates them. Each
 
 ## Why
 
-Vanilla Playwright is powerful but brittle. One selector change and the script breaks; there is no vision fallback, no OCR, no self-healing. Rotom closes that gap with AI-driven resilience and packages it so an agent can drive it directly, in the same one-command, skills-first way that made superpowers spread.
+Vanilla Playwright is powerful but brittle. One selector change and the script breaks; there is no vision fallback, no OCR, no self-healing. Rotom closes that gap and packages it so an agent can drive it directly, in the same one-command, skills-first way that made superpowers spread. Rotom is not another browser SDK to code against; it is a Claude Code plugin that works alongside your existing browser tooling and adds the resilience and RPA discipline that bare automation lacks.
 
 ## Install
 
@@ -29,7 +29,20 @@ More forms (OCR, self-healing, orchestration) are on the roadmap.
 
 ## Status
 
-Early, and building in the open. The plugin skeleton and bootstrap are in place; the MCP server and the individual forms are in active development. Star and watch to follow along.
+Early, and building in the open. Live now: the MCP server and the first form, **resilient-locator**. Next up: vision-fallback, structured-extract, then OCR and retry/verification. Star and watch to follow along.
+
+## Development
+
+The MCP server lives in `server/` (TypeScript):
+
+```
+cd server
+npm install
+npx playwright install chromium
+npm run build
+```
+
+The plugin's `.mcp.json` launches the built server via `${CLAUDE_PLUGIN_ROOT}/server/dist/index.js`. Tools: `rotom_open`, `rotom_locate`, `rotom_click`, `rotom_fill`, `rotom_get_text`, `rotom_close`.
 
 ## License
 

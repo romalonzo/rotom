@@ -20,4 +20,4 @@ Rotom gives you reliable hands for operating any UI. When a task means driving a
 ## Principle
 Try the most robust locator first (role / visible text / test id), fall back to vision only when the DOM cannot resolve the target, and verify the action actually succeeded before moving to the next step.
 
-> Status: early scaffold. The MCP server and the individual form skills are being built (see the repo roadmap). This bootstrap defines how the forms fit together.
+> Status: resilient-locator is live via the rotom MCP tools (rotom_open / rotom_locate / rotom_click / rotom_fill / rotom_get_text / rotom_close). vision-fallback and structured-extract are next. This bootstrap defines how the forms fit together.
