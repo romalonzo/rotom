@@ -19,6 +19,8 @@ Vanilla Playwright is powerful but brittle. One selector change and the script b
 
 Restart Claude Code after installing. Requires Claude Code 2.0.13 or newer.
 
+Once installed, Rotom auto-loads its `using-rotom` guide at the start of each session (a SessionStart hook), so the agent knows when to reach for the forms.
+
 ## Forms
 
 - **resilient-locator** — resolve an element through a cascade of strategies so it survives DOM changes.

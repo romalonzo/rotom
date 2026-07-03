@@ -1,6 +1,6 @@
 {
   "name": "rotom",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "UiPath-grade RPA for Playwright, as a Claude Code plugin. Resilient, self-healing, vision-and-OCR browser automation an agent can actually drive.",
   "license": "MIT",
   "homepage": "https://github.com/romalonzo/rotom",
