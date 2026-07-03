@@ -23,3 +23,9 @@ In-app AI builders get the STRUCTURE right but the SPECIFICS wrong: wrong merge 
 - Prefer the app's own AI builder over hand-building; it is the fast path.
 - Custom builder controls (tabs, dropdowns, canvases) usually need the vision fallback (screenshot + `rotom_click_at`) because the DOM cannot resolve them.
 - Always verify. Treat AI output as a first draft, not a finished asset.
+
+## Known limits (Rotom roadmap)
+Discovered driving GoHighLevel's "Build with AI": Rotom can OPEN an app's AI builder and coordinate-click within it (tabs, buttons, and even list-menu deletes), but it could NOT type the prompt. Two gaps block full in-app-AI-builder control, both on the roadmap:
+1. **Frame-aware locators** — builder canvases and their prompt editors often run inside an iframe; Rotom's page-level DOM locators (role/label/placeholder/css) can't pierce it. Needs iframe selection / frame-scoped locating.
+2. **A raw keyboard-type tool** (e.g. `rotom_type` / `rotom_press`) — for typing into a focused editor that `rotom_fill` can't target (ProseMirror/TipTap, shadow DOM, iframe content). Coordinate-click can focus it, but there's no way to type text.
+Until these ship, the prompt-entry step of an iframe-based AI builder is a human handoff; Rotom handles everything around it (open, navigate, verify, cleanup).
