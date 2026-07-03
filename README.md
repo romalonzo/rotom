@@ -59,7 +59,7 @@ rotom_click_at { x, y }   // click what you see
 
 ## Status
 
-Early, and building in the open. Live now: the MCP server (12 tools) and eight forms — resilient-locator, vision-fallback, structured-extract, ocr, retry-and-verify, logged-in-session, ai-builder-operator, writing-rotom-forms — with an end-to-end test suite passing against a local fixture. Star and watch to follow along.
+Early, and building in the open. Live now: the MCP server (14 tools) and eight forms — resilient-locator, vision-fallback, structured-extract, ocr, retry-and-verify, logged-in-session, ai-builder-operator, writing-rotom-forms — with an end-to-end test suite passing against a local fixture. Star and watch to follow along.
 
 ## Development
 
@@ -73,7 +73,7 @@ npm run build
 npm test        # end-to-end against test/fixture.html
 ```
 
-Tools: `rotom_open`, `rotom_locate`, `rotom_click`, `rotom_fill`, `rotom_get_text`, `rotom_extract`, `rotom_wait_for`, `rotom_screenshot`, `rotom_click_at`, `rotom_ocr`, `rotom_page`, `rotom_close`.
+Tools: `rotom_open`, `rotom_locate`, `rotom_click`, `rotom_fill`, `rotom_get_text`, `rotom_extract`, `rotom_wait_for`, `rotom_screenshot`, `rotom_click_at`, `rotom_type`, `rotom_press`, `rotom_ocr`, `rotom_page`, `rotom_close`.
 
 Run it locally before publishing:
 

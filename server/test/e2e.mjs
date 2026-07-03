@@ -30,10 +30,10 @@ try {
 
   // tools registered
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  for (const t of ["rotom_open", "rotom_locate", "rotom_click", "rotom_fill", "rotom_get_text", "rotom_extract", "rotom_wait_for", "rotom_screenshot", "rotom_click_at", "rotom_ocr", "rotom_page", "rotom_close"]) {
+  for (const t of ["rotom_open", "rotom_locate", "rotom_click", "rotom_fill", "rotom_get_text", "rotom_extract", "rotom_wait_for", "rotom_screenshot", "rotom_click_at", "rotom_ocr", "rotom_page", "rotom_type", "rotom_press", "rotom_close"]) {
     assert.ok(tools.includes(t), `tool ${t} registered`);
   }
-  ok("all 12 tools registered");
+  ok("all 14 tools registered");
 
   // open
   let r = await call("rotom_open", { url: fixture, headless: true });
@@ -76,6 +76,14 @@ try {
   r = await call("rotom_get_text", { css: "#pwecho" });
   assert.equal(r.text, "hunter2");
   ok("fill set the input value");
+
+  // keyboard type + press: focus the field, select-all, type via real keystrokes
+  await call("rotom_click", { label: "Password" });
+  await call("rotom_press", { key: "Control+A" });
+  await call("rotom_type", { text: "kbdtyped" });
+  r = await call("rotom_get_text", { css: "#pwecho" });
+  assert.equal(r.text, "kbdtyped");
+  ok("keyboard type + press worked on the focused field");
 
   // structured extract
   r = await call("rotom_extract", { fields: [

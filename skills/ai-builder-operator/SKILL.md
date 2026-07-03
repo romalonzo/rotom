@@ -24,8 +24,9 @@ In-app AI builders get the STRUCTURE right but the SPECIFICS wrong: wrong merge 
 - Custom builder controls (tabs, dropdowns, canvases) usually need the vision fallback (screenshot + `rotom_click_at`) because the DOM cannot resolve them.
 - Always verify. Treat AI output as a first draft, not a finished asset.
 
-## Known limits (Rotom roadmap)
-Discovered driving GoHighLevel's "Build with AI": Rotom can OPEN an app's AI builder and coordinate-click within it (tabs, buttons, and even list-menu deletes), but it could NOT type the prompt. Two gaps block full in-app-AI-builder control, both on the roadmap:
-1. **Frame-aware locators** — builder canvases and their prompt editors often run inside an iframe; Rotom's page-level DOM locators (role/label/placeholder/css) can't pierce it. Needs iframe selection / frame-scoped locating.
-2. **A raw keyboard-type tool** (e.g. `rotom_type` / `rotom_press`) — for typing into a focused editor that `rotom_fill` can't target (ProseMirror/TipTap, shadow DOM, iframe content). Coordinate-click can focus it, but there's no way to type text.
-Until these ship, the prompt-entry step of an iframe-based AI builder is a human handoff; Rotom handles everything around it (open, navigate, verify, cleanup).
+## Driving an iframe-based AI builder (the ProseMirror / iframe case)
+Builder canvases and their prompt editors often run inside an iframe, so `rotom_fill` (page-level DOM locators) can't reach them. The way through:
+1. `rotom_click_at` the prompt box to focus it (coordinate clicks land inside iframes).
+2. `rotom_type` your prompt, keystrokes go to the focused element regardless of iframe boundaries.
+3. `rotom_click_at` the send button (or `rotom_press "Enter"` where that submits).
+This was proven on GoHighLevel's "Build with AI". `rotom_type` + `rotom_press` (added v0.4.0) close the keyboard gap. A remaining nice-to-have is frame-aware *locating* (so you can target in-frame controls by role/text instead of coordinates), but click_at + type already covers the common case.

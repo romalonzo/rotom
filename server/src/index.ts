@@ -53,7 +53,7 @@ const hintsShape = {
   exact: z.boolean().optional().describe("Match text/name exactly (default false)"),
 };
 
-const server = new McpServer({ name: "rotom", version: "0.3.0" });
+const server = new McpServer({ name: "rotom", version: "0.4.0" });
 
 server.tool(
   "rotom_open",
@@ -196,6 +196,28 @@ server.tool(
     const p = await ensurePage();
     await p.mouse.click(x, y);
     return { content: [{ type: "text", text: `Clicked at (${x}, ${y}).` }] };
+  }
+);
+
+server.tool(
+  "rotom_type",
+  "Type text into whatever element currently has focus, via real keystrokes. Use when rotom_fill cannot locate the field (an iframe editor, a ProseMirror/TipTap box, shadow DOM): focus it first with rotom_click or rotom_click_at, then rotom_type. Keystrokes reach the focused element regardless of iframe boundaries.",
+  { text: z.string().describe("The text to type into the focused element"), delayMs: z.number().optional().describe("Per-keystroke delay in ms (default 0)") },
+  async ({ text, delayMs }) => {
+    const p = await ensurePage();
+    await p.keyboard.type(text, { delay: delayMs ?? 0 });
+    return { content: [{ type: "text", text: `Typed ${text.length} characters into the focused element.` }] };
+  }
+);
+
+server.tool(
+  "rotom_press",
+  "Press a keyboard key (or chord) on the focused element, e.g. Enter, Tab, Escape, Control+A. Use to submit, move between fields, or clear a selection.",
+  { key: z.string().describe("Key or chord, e.g. Enter, Tab, Escape, Control+A") },
+  async ({ key }) => {
+    const p = await ensurePage();
+    await p.keyboard.press(key);
+    return { content: [{ type: "text", text: `Pressed ${key}.` }] };
   }
 );
 
