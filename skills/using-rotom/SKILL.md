@@ -14,6 +14,7 @@ Rotom gives you reliable hands for operating any UI. When a task means driving a
 - **ocr** — read text baked into images or canvas.
 - **retry-and-verify** — confirm each action worked; recover from transient failures.
 - **logged-in-session** — operate sites behind a login by reusing a saved profile; a human logs in once.
+- **ai-builder-operator** — drive an app's OWN built-in AI builder ("Build with AI" / "Ask AI") to generate a draft, then verify it.
 - **writing-rotom-forms** — how to author and pressure-test new forms.
 
 ## When to use Rotom

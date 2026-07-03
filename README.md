@@ -29,6 +29,7 @@ Once installed, Rotom auto-loads its `using-rotom` guide at the start of each se
 - **ocr** — read text baked into images or canvas (optional tesseract.js).
 - **retry-and-verify** — confirm each action worked and recover from transient failures.
 - **logged-in-session** — operate sites behind a login (a CRM, a dashboard) by reusing a saved profile; a human logs in once.
+- **ai-builder-operator** — drive an app's own built-in AI builder ("Build with AI" / "Ask AI") to generate a draft, then verify it.
 - **writing-rotom-forms** — the meta-form for authoring and pressure-testing new forms.
 
 Roadmap (next forms, from a UiPath capability pass): `table-extract` (paginated grids to JSON), `session-fetch` (authenticated API calls from the browser session), `human-handoff` (pause for CAPTCHA/MFA/OTP), `document-extract`, and `run-trace`.
@@ -58,7 +59,7 @@ rotom_click_at { x, y }   // click what you see
 
 ## Status
 
-Early, and building in the open. Live now: the MCP server (12 tools) and seven forms — resilient-locator, vision-fallback, structured-extract, ocr, retry-and-verify, logged-in-session, writing-rotom-forms — with an end-to-end test suite passing against a local fixture. Star and watch to follow along.
+Early, and building in the open. Live now: the MCP server (12 tools) and eight forms — resilient-locator, vision-fallback, structured-extract, ocr, retry-and-verify, logged-in-session, ai-builder-operator, writing-rotom-forms — with an end-to-end test suite passing against a local fixture. Star and watch to follow along.
 
 ## Development
 
